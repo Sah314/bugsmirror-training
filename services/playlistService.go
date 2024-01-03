@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"training/common"
-	"training/models"
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -23,10 +22,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	models.UsersLock.Lock()
-	defer models.UsersLock.Unlock()
+	common.UsersLock.Lock()
+	defer common.UsersLock.Unlock()
 	//Implemented logic to find the user by secret code
-	for _, user := range models.Users {
+	for _, user := range common.Users {
 		if user.SecretCode == reqBody.SecretCode {
 			common.EncodeToJSON(w, user)
 			return
@@ -52,19 +51,19 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	models.UsersLock.Lock()
-	defer models.UsersLock.Unlock()
+	common.UsersLock.Lock()
+	defer common.UsersLock.Unlock()
 
 	// Generate a unique secret code
 	secretCode := common.GenerateSecretKey() // after registration this function generates a unique secret key for the user
-	user := models.User{
+	user := common.User{
 		ID:         common.GenerateUniqueID(),
 		SecretCode: secretCode,
 		Name:       reqBody.Name,
 		Email:      reqBody.Email,
 	}
 
-	models.Users[user.ID] = user
+	common.Users[user.ID] = user
 	common.EncodeToJSON(w, user)
 }
 
@@ -84,7 +83,7 @@ func ViewProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, userExists := models.Users[reqBody.UserID]
+	user, userExists := common.Users[reqBody.UserID]
 	if !userExists {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
@@ -102,7 +101,7 @@ func AddSongs(w http.ResponseWriter, r *http.Request) {
 	var reqBody struct {
 		UserID     string      `json:"userID"`
 		PlaylistID string      `json:"playlistID"`
-		Song       models.Song `json:"song"`
+		Song       common.Song `json:"song"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
@@ -110,10 +109,10 @@ func AddSongs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	models.UsersLock.Lock()
-	defer models.UsersLock.Unlock()
+	common.UsersLock.Lock()
+	defer common.UsersLock.Unlock()
 
-	user, userExists := models.Users[reqBody.UserID]
+	user, userExists := common.Users[reqBody.UserID]
 	if !userExists {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
@@ -164,10 +163,10 @@ func GetAllSongs(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	models.UsersLock.Lock()
-	defer models.UsersLock.Unlock()
+	common.UsersLock.Lock()
+	defer common.UsersLock.Unlock()
 
-	user, userExists := models.Users[reqBody.UserID]
+	user, userExists := common.Users[reqBody.UserID]
 	if !userExists {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
@@ -189,16 +188,16 @@ func CreatePlaylist(w http.ResponseWriter, r *http.Request) {
 	var reqBody struct {
 		UserID string `json:"userID"`
 		//PlaylistID string      `json:"playlistID"`
-		Playlist models.Playlist `json:"playlist"`
+		Playlist common.Playlist `json:"playlist"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	models.UsersLock.Lock()
-	defer models.UsersLock.Unlock()
+	common.UsersLock.Lock()
+	defer common.UsersLock.Unlock()
 
-	user, userExists := models.Users[reqBody.UserID]
+	user, userExists := common.Users[reqBody.UserID]
 	if !userExists {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
@@ -223,10 +222,10 @@ func DeleteSongs(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	models.UsersLock.Lock()
-	defer models.UsersLock.Unlock()
+	common.UsersLock.Lock()
+	defer common.UsersLock.Unlock()
 
-	user, userExists := models.Users[reqBody.UserID]
+	user, userExists := common.Users[reqBody.UserID]
 	if !userExists {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
@@ -244,25 +243,31 @@ func DeleteSongs(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeletePlaylist(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+	if r.Method != http.MethodPost {
+		http.Error(w, common.InvalidRequest, http.StatusMethodNotAllowed)
 		return
 	}
+	//Todo: make this global
 	var reqBody struct {
 		UserID     string `json:"userID"`
 		PlaylistID string `json:"playlistID"`
 		//Playlist models.Playlist `json:"playlist"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, common.InvalidRequestbody, http.StatusBadRequest)
 		return
 	}
-	models.UsersLock.Lock()
-	defer models.UsersLock.Unlock()
+	common.UsersLock.Lock()
+	defer common.UsersLock.Unlock()
+	//Todo: validate if body has user id
+	if reqBody.UserID == "" {
+		http.Error(w, common.UserIdNotfound, http.StatusBadRequest)
+		return
+	}
 
-	user, userExists := models.Users[reqBody.UserID]
+	user, userExists := common.Users[reqBody.UserID]
 	if !userExists {
-		http.Error(w, "User not found", http.StatusNotFound)
+		http.Error(w, common.UserNotfound, http.StatusNotFound)
 		return
 	}
 	//playlist, playlistExists := user.Playlists[reqBody.PlaylistID]
@@ -270,11 +275,10 @@ func DeletePlaylist(w http.ResponseWriter, r *http.Request) {
 	//	http.Error(w, "Playlist not found", http.StatusNotFound)
 	//	return
 	//}
+
 	delete(user.Playlists, reqBody.PlaylistID)
-	common.EncodeToJSON(w, map[string]string{
-		"message": common.Successmessage,
-	})
-	fmt.Println("Successfully deleted given playlist")
+	//Todo: define a global struct for response
+	common.EncodeToJSON(w, common.Successmessage)
 
 }
 
@@ -299,7 +303,7 @@ func SongDetails(w http.ResponseWriter, r *http.Request) {
 	//models.UsersLock.Lock()
 	//defer models.UsersLock.Unlock()
 
-	user, userExists := models.Users[reqBody.UserID]
+	user, userExists := common.Users[reqBody.UserID]
 	if !userExists {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return

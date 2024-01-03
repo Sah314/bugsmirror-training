@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"training/common"
 	"training/models"
@@ -35,7 +36,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
-
+	fmt.Println("In register method")
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -150,7 +151,34 @@ func AddSongs(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAllSongs(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+	var reqBody struct {
+		UserID     string `json:"userID"`
+		PlaylistID string `json:"playlistID"`
+	}
 
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	models.UsersLock.Lock()
+	defer models.UsersLock.Unlock()
+
+	user, userExists := models.Users[reqBody.UserID]
+	if !userExists {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	playlist, playlistExists := user.Playlists[reqBody.PlaylistID]
+	if !playlistExists {
+		http.Error(w, "Playlist not found", http.StatusNotFound)
+		return
+	}
+	common.EncodeToJSON(w, playlist.Songs)
 }
 func CreatePlaylist(w http.ResponseWriter, r *http.Request) {
 

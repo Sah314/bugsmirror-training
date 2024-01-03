@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"training/services"
 )
@@ -18,6 +19,7 @@ func main() {
 	http.HandleFunc("/getSongDetail", services.SongDetails)
 	err := http.ListenAndServe(":4000", nil)
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 

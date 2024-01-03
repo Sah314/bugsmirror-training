@@ -209,10 +209,72 @@ func CreatePlaylist(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteSongs(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+	var reqBody struct {
+		UserID string `json:"userID"`
+		//Playlist models.Playlist `json:"playlist"`
+		PlaylistID string `json:"playlistID"`
+		SongID     string `json:"songID"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	models.UsersLock.Lock()
+	defer models.UsersLock.Unlock()
 
+	user, userExists := models.Users[reqBody.UserID]
+	if !userExists {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+	playlist, playlistExists := user.Playlists[reqBody.PlaylistID]
+	if !playlistExists {
+		http.Error(w, "Playlist not found", http.StatusNotFound)
+		return
+	}
+	delete(playlist.Songs, reqBody.SongID)
+
+	common.EncodeToJSON(w, map[string]string{
+		"message": common.Successmessage,
+	})
 }
 
 func DeletePlaylist(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+	var reqBody struct {
+		UserID     string `json:"userID"`
+		PlaylistID string `json:"playlistID"`
+		//Playlist models.Playlist `json:"playlist"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	models.UsersLock.Lock()
+	defer models.UsersLock.Unlock()
+
+	user, userExists := models.Users[reqBody.UserID]
+	if !userExists {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+	//playlist, playlistExists := user.Playlists[reqBody.PlaylistID]
+	//if !playlistExists{
+	//	http.Error(w, "Playlist not found", http.StatusNotFound)
+	//	return
+	//}
+	delete(user.Playlists, reqBody.PlaylistID)
+	common.EncodeToJSON(w, map[string]string{
+		"message": common.Successmessage,
+	})
+	fmt.Println("Successfully deleted given playlist")
 
 }
 

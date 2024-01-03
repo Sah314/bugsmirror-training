@@ -10,7 +10,7 @@ func main() {
 	http.HandleFunc("/login", services.Login)
 	http.HandleFunc("/register", services.Register)
 	http.HandleFunc("/viewProfile", services.ViewProfile)
-	http.HandleFunc("/getAllSongsOfPlaylist", services.Addsongs)
+	http.HandleFunc("/getAllSongsOfPlaylist", services.GetAllSongs)
 	http.HandleFunc("/createPlaylist", services.CreatePlaylist)
 	http.HandleFunc("/addSongtoPlaylist", services.AddSongs)
 	http.HandleFunc("/deleteSongsfromplaylist", services.DeleteSongs)

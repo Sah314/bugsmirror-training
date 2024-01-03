@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"net/http"
+	"strconv"
 	"training/models"
 )
 
 func GenerateUniqueID() string {
-	id := uuid.New()
 	models.IdCounter++
+	return strconv.Itoa(models.IdCounter)
+}
+func GenerateSecretKey() string {
+	id := uuid.New()
 	return id.String()
 }
 
@@ -26,7 +30,10 @@ func GenerateSongID() string {
 	return fmt.Sprintf("SN%d", models.SongID)
 }
 
-func RespondWithJSON(w http.ResponseWriter, data interface{}) {
+func EncodeToJSON(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(data)
+	err := json.NewEncoder(w).Encode(data)
+	if err != nil {
+		return
+	}
 }

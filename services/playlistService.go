@@ -32,32 +32,66 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
 	http.Error(w, "User not found", http.StatusNotFound)
-
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
 
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+	// parsing the request body
+	var reqBody struct {
+		Name  string `json:"name"`
+		Email string `json:"email"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	models.UsersLock.Lock()
+	defer models.UsersLock.Unlock()
+
+	// Generate a unique secret code
+	secretCode := common.GenerateUniqueID() // after registration this function generates a unique secret key for the user
+	user := models.User{
+		ID:         common.GenerateUniqueID(),
+		SecretCode: secretCode,
+		Name:       reqBody.Name,
+		Email:      reqBody.Email,
+	}
+
+	models.Users[user.ID] = user
+	common.RespondWithJSON(w, user)
 }
-func EditUser(w http.ResponseWriter, r *http.Request) {
+
+func ViewProfile(w http.ResponseWriter, r *http.Request) {
 
 }
+
 func Addsongs(w http.ResponseWriter, r *http.Request) {
 
 }
+
 func CreatePlaylist(w http.ResponseWriter, r *http.Request) {
 
 }
+
 func AddSongs(w http.ResponseWriter, r *http.Request) {
 
 }
+
 func DeleteSongs(w http.ResponseWriter, r *http.Request) {
 
 }
+
 func DeletePlaylist(w http.ResponseWriter, r *http.Request) {
 
 }
+
 func SongDetails(w http.ResponseWriter, r *http.Request) {
 
 }

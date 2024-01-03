@@ -7,13 +7,13 @@ type User struct {
 	SecretCode string
 	Name       string
 	Email      string
-	Playlists  []Playlist
+	Playlists  map[string]Playlist
 }
 
 // Playlist represents a playlist's data.
 type Playlist struct {
 	ID    string
-	Songs []Song
+	Songs map[string]Song
 }
 
 // Song represents a song's data.
@@ -25,7 +25,7 @@ type Song struct {
 }
 
 var (
-	Users      []User
+	Users      = make(map[string]User)
 	UsersLock  sync.Mutex
 	IdCounter  = 1
 	PlaylistID = 1

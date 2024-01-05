@@ -7,8 +7,8 @@ current_dir=$(pwd)
 file_id="1s6_apLYJFt1tMkhmlJX5Lbd2t45pXvc2Vc04bmFLXmg"
 output_file="Sahil_Task2.docx"
 
+echo "Downloading file"
 gdown "https://drive.google.com/uc?id=${file_id}" -O "${output_file}"
-
 echo "Downloaded file successfully at ${current_dir}"
 
 hostname=$(whoami)

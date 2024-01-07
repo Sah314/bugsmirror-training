@@ -15,6 +15,19 @@ type Playlist struct {
 	ID    string
 	Songs map[string]Song
 }
+type ReqBody struct {
+	UserID     string   `json:"userID"`
+	PlaylistID string   `json:"playlistID"`
+	SongID     string   `json:"songID"`
+	Playlist   Playlist `json:"playlist"`
+	Song       Song     `json:"song"`
+}
+type UserReqBody struct {
+	ID         string `json:"id"`
+	SecretCode string `json:"secretCode"`
+	Name       string `json:"name"`
+	Email      string `json:"email"`
+}
 
 // Song represents a song's data.
 type Song struct {

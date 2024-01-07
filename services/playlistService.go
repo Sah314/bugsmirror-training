@@ -9,16 +9,14 @@ import (
 
 func Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		http.Error(w, common.InvalidRequest, http.StatusMethodNotAllowed)
 		return
 	}
 	//parsing from the request body
-	var reqBody struct {
-		SecretCode string `json:"secretCode"`
-	}
+	reqBody := common.UserReqBody{}
 
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, common.InvalidRequestbody, http.StatusBadRequest)
 		return
 	}
 
@@ -31,23 +29,19 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	http.Error(w, "User not found", http.StatusNotFound)
+	http.Error(w, common.UserNotfound, http.StatusNotFound)
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("In register method")
 	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		http.Error(w, common.InvalidRequest, http.StatusMethodNotAllowed)
 		return
 	}
 	// parsing the request body
-	var reqBody struct {
-		Name  string `json:"name"`
-		Email string `json:"email"`
-	}
-
+	reqBody := common.UserReqBody{}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, common.InvalidRequestbody, http.StatusBadRequest)
 		return
 	}
 
@@ -69,23 +63,20 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 func ViewProfile(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		http.Error(w, common.InvalidRequest, http.StatusMethodNotAllowed)
 		return
 	}
 
-	//destructing from request body
-	var reqBody struct {
-		UserID string `json:"userID"`
-	}
+	reqBody := common.ReqBody{}
 
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, common.InvalidRequestbody, http.StatusBadRequest)
 		return
 	}
 
 	user, userExists := common.Users[reqBody.UserID]
 	if !userExists {
-		http.Error(w, "User not found", http.StatusNotFound)
+		http.Error(w, common.UserNotfound, http.StatusNotFound)
 		return
 	}
 	common.EncodeToJSON(w, user)
@@ -93,19 +84,14 @@ func ViewProfile(w http.ResponseWriter, r *http.Request) {
 
 func AddSongs(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		http.Error(w, common.InvalidRequest, http.StatusMethodNotAllowed)
 		return
 	}
 
 	//destructing from request body
-	var reqBody struct {
-		UserID     string      `json:"userID"`
-		PlaylistID string      `json:"playlistID"`
-		Song       common.Song `json:"song"`
-	}
-
+	reqBody := common.ReqBody{}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, common.InvalidRequestbody, http.StatusBadRequest)
 		return
 	}
 
@@ -114,13 +100,13 @@ func AddSongs(w http.ResponseWriter, r *http.Request) {
 
 	user, userExists := common.Users[reqBody.UserID]
 	if !userExists {
-		http.Error(w, "User not found", http.StatusNotFound)
+		http.Error(w, common.UserNotfound, http.StatusNotFound)
 		return
 	}
 
 	playlist, playlistExists := user.Playlists[reqBody.PlaylistID]
 	if !playlistExists {
-		http.Error(w, "Playlist not found", http.StatusNotFound)
+		http.Error(w, common.PlaylistNotfound, http.StatusNotFound)
 		return
 	}
 
@@ -151,16 +137,13 @@ func AddSongs(w http.ResponseWriter, r *http.Request) {
 
 func GetAllSongs(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		http.Error(w, common.InvalidRequest, http.StatusMethodNotAllowed)
 		return
 	}
-	var reqBody struct {
-		UserID     string `json:"userID"`
-		PlaylistID string `json:"playlistID"`
-	}
 
+	reqBody := common.ReqBody{}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, common.InvalidRequestbody, http.StatusBadRequest)
 		return
 	}
 	common.UsersLock.Lock()
@@ -168,13 +151,13 @@ func GetAllSongs(w http.ResponseWriter, r *http.Request) {
 
 	user, userExists := common.Users[reqBody.UserID]
 	if !userExists {
-		http.Error(w, "User not found", http.StatusNotFound)
+		http.Error(w, common.UserNotfound, http.StatusNotFound)
 		return
 	}
 
 	playlist, playlistExists := user.Playlists[reqBody.PlaylistID]
 	if !playlistExists {
-		http.Error(w, "Playlist not found", http.StatusNotFound)
+		http.Error(w, common.PlaylistNotfound, http.StatusNotFound)
 		return
 	}
 	common.EncodeToJSON(w, playlist.Songs)
@@ -182,16 +165,12 @@ func GetAllSongs(w http.ResponseWriter, r *http.Request) {
 func CreatePlaylist(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		http.Error(w, common.InvalidRequest, http.StatusMethodNotAllowed)
 		return
 	}
-	var reqBody struct {
-		UserID string `json:"userID"`
-		//PlaylistID string      `json:"playlistID"`
-		Playlist common.Playlist `json:"playlist"`
-	}
+	reqBody := common.ReqBody{}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, common.InvalidRequestbody, http.StatusBadRequest)
 		return
 	}
 	common.UsersLock.Lock()
@@ -199,7 +178,7 @@ func CreatePlaylist(w http.ResponseWriter, r *http.Request) {
 
 	user, userExists := common.Users[reqBody.UserID]
 	if !userExists {
-		http.Error(w, "User not found", http.StatusNotFound)
+		http.Error(w, common.UserNotfound, http.StatusNotFound)
 		return
 	}
 	reqBody.Playlist.ID = common.GeneratePlaylistID()
@@ -209,17 +188,13 @@ func CreatePlaylist(w http.ResponseWriter, r *http.Request) {
 
 func DeleteSongs(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		http.Error(w, common.InvalidRequest, http.StatusMethodNotAllowed)
 		return
 	}
-	var reqBody struct {
-		UserID string `json:"userID"`
-		//Playlist models.Playlist `json:"playlist"`
-		PlaylistID string `json:"playlistID"`
-		SongID     string `json:"songID"`
-	}
+
+	reqBody := common.ReqBody{}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, common.InvalidRequestbody, http.StatusBadRequest)
 		return
 	}
 	common.UsersLock.Lock()
@@ -227,12 +202,12 @@ func DeleteSongs(w http.ResponseWriter, r *http.Request) {
 
 	user, userExists := common.Users[reqBody.UserID]
 	if !userExists {
-		http.Error(w, "User not found", http.StatusNotFound)
+		http.Error(w, common.UserNotfound, http.StatusNotFound)
 		return
 	}
 	playlist, playlistExists := user.Playlists[reqBody.PlaylistID]
 	if !playlistExists {
-		http.Error(w, "Playlist not found", http.StatusNotFound)
+		http.Error(w, common.PlaylistNotfound, http.StatusNotFound)
 		return
 	}
 	delete(playlist.Songs, reqBody.SongID)
@@ -248,11 +223,7 @@ func DeletePlaylist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//Todo: make this global
-	var reqBody struct {
-		UserID     string `json:"userID"`
-		PlaylistID string `json:"playlistID"`
-		//Playlist models.Playlist `json:"playlist"`
-	}
+	reqBody := common.ReqBody{}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		http.Error(w, common.InvalidRequestbody, http.StatusBadRequest)
 		return
@@ -284,19 +255,15 @@ func DeletePlaylist(w http.ResponseWriter, r *http.Request) {
 
 func SongDetails(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		http.Error(w, common.InvalidRequest, http.StatusMethodNotAllowed)
 		return
 	}
 
 	//destructing from request body
-	var reqBody struct {
-		UserID     string `json:"userID"`
-		PlaylistID string `json:"playlistID"`
-		SongID     string `json:"SongID"`
-	}
+	reqBody := common.ReqBody{}
 
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, common.InvalidRequestbody, http.StatusBadRequest)
 		return
 	}
 
@@ -305,18 +272,18 @@ func SongDetails(w http.ResponseWriter, r *http.Request) {
 
 	user, userExists := common.Users[reqBody.UserID]
 	if !userExists {
-		http.Error(w, "User not found", http.StatusNotFound)
+		http.Error(w, common.UserNotfound, http.StatusNotFound)
 		return
 	}
 
 	playlist, playlistExists := user.Playlists[reqBody.PlaylistID]
 	if !playlistExists {
-		http.Error(w, "Playlist not found", http.StatusNotFound)
+		http.Error(w, common.PlaylistNotfound, http.StatusNotFound)
 		return
 	}
 	song, songExists := playlist.Songs[reqBody.SongID]
 	if !songExists {
-		http.Error(w, "Song not found", http.StatusNotFound)
+		http.Error(w, common.SongNotfound, http.StatusNotFound)
 		return
 	}
 	common.EncodeToJSON(w, song)

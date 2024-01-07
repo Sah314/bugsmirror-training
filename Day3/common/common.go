@@ -3,8 +3,10 @@ package common
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -12,16 +14,20 @@ import (
 	"regexp"
 )
 
+type ResultStatus string
 
-type enum ={
-	
-}
+const (
+	Pass ResultStatus = "Pass"
+	Fail ResultStatus = "Fail"
+)
 
-var jsonData struct {
-	PackageName string `json:"packageName"`
-
-	Result enum `json:"result"`
-
+// Result struct for storing results
+type Result struct {
+	PackageName      string            `json:"package_name"`
+	ManifestChecksum string            `json:"manifest_checksum"`
+	LayoutChecksums  map[string]string `json:"layout_checksums"`
+	Status           ResultStatus      `json:"status"`
+	ErrorMessage     string            `json:"error_message,omitempty"`
 }
 
 func DownloadFile(url, outputPath string) error {
@@ -148,6 +154,89 @@ func ExtractPackageName(outputDir string) (string, error) {
 
 	return match[1], nil
 }
+
+func StoreResults(apkPath, outputJSONPath string) error {
+	result := Result{}
+
+	// Extract package name
+	packageName, err := ExtractPackageName(apkPath)
+	if err != nil {
+		result.Status = Fail
+		result.ErrorMessage = err.Error()
+	} else {
+		result.PackageName = packageName
+
+		// Generate checksum for AndroidManifest.xml
+		manifestPath := filepath.Join(apkPath, "AndroidManifest.xml")
+		manifestChecksum, err := GenerateChecksum(manifestPath)
+		if err != nil {
+			result.Status = Fail
+			result.ErrorMessage = err.Error()
+		} else {
+			result.ManifestChecksum = manifestChecksum
+
+			// Generate checksum for res/layout files
+			layoutDir := filepath.Join(apkPath, "res", "layout")
+			layoutChecksums := make(map[string]string)
+			err := filepath.Walk(layoutDir, func(path string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+				if !info.IsDir() {
+					relativePath, err := filepath.Rel(layoutDir, path)
+					if err != nil {
+						return err
+					}
+					checksum, err := GenerateChecksum(path)
+					if err != nil {
+						return err
+					}
+					layoutChecksums[relativePath] = checksum
+				}
+				return nil
+			})
+			if err != nil {
+				result.Status = Fail
+				result.ErrorMessage = err.Error()
+			} else {
+				result.LayoutChecksums = layoutChecksums
+				result.Status = Pass
+			}
+		}
+	}
+
+	// Read existing data from the file
+	existingData, err := ioutil.ReadFile(outputJSONPath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	// Unmarshal existing data into a slice of Result
+	var existingSlice []Result
+	if len(existingData) > 0 {
+		if err := json.Unmarshal(existingData, &existingSlice); err != nil {
+			return err
+		}
+	}
+
+	// Append the new result to the existing slice
+	existingSlice = append(existingSlice, result)
+
+	// Marshal the combined data back to JSON
+	combinedData, err := json.MarshalIndent(existingSlice, "", "    ")
+	if err != nil {
+		return err
+	}
+
+	// Write the combined data back to the file
+	err = ioutil.WriteFile(outputJSONPath, combinedData, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 //func IsApktoolInstalled() bool {
 //	// Check if 'apktool' command is available in PATH
 //	_, err := exec.LookPath(apktoolCmd)

@@ -64,10 +64,9 @@ func main() {
 			//}
 
 			// Create a unique JSON file for each APK
-			outputJSONPath := fmt.Sprintf("results_%s.json", strings.TrimSuffix(apkFilename, filepath.Ext(apkFilename)))
-
+			outputJSONPath := "results.json"
 			// Store results in JSON file
-			err = common.StoreResults(apkDir, outputJSONPath)
+			err = common.StoreResults(outputDir, outputJSONPath)
 			if err != nil {
 				fmt.Println("Error storing results:", err)
 				os.Exit(1)

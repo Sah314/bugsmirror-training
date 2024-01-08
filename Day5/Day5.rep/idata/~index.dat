@@ -1,0 +1,14 @@
+VERSION=1
+/
+/UnCrackable.apk
+/UnCrackable.apk/lib
+/UnCrackable.apk/lib/arm64-v8a
+  00000002:libfoo.so:c0a8119c7f22744944680600
+/UnCrackable.apk/lib/armeabi-v7a
+  00000003:libfoo.so:c0a8119c7f72750418531500
+/UnCrackable.apk/lib/x86
+  00000001:libfoo.so:c0a8119c7ec2732467662900
+/UnCrackable.apk/lib/x86_64
+  00000000:libfoo.so:c0a8119c7eb2731590459200
+NEXT-ID:4
+MD5:d41d8cd98f00b204e9800998ecf8427e

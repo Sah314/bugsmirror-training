@@ -1,26 +1,57 @@
-Java.perform(function () {
-    var MainActivity = Java.use("sg.vantagepoint.uncrackable2.MainActivity");
+// Replace "libfoo.so" with the actual library name
+var moduleName = 'libfoo.so';
+//var strncmpAddress = Module.findExportByName(moduleName, 'strncmp');
+// function onClick(){
 
-    // Intercept the verify method
-    MainActivity.verify.overload('android.view.View').implementation = function (view) {
-        // Access the EditText instance
-        var editText = this.findViewById(0x7f070035); // Replace with the actual ID of your EditText
-        //console.log(editText);
-        // Get the text from the EditText
-        //var inputText = editText.getText().toString();
-        var nativeEditText = Java.cast(editText, Java.use("android.widget.EditText"));
+// }
 
-        // Get the text from the EditText
-       // var inputText = getTextMethod.invoke(nativeEditText, []);
-        var inputText = nativeEditText.getText();
-        // Log method call and input
-        console.log('verify method is called with input:', JSON.stringify(inputText));
-
+setTimeout(() => {
+    Interceptor.attach(Module.findExportByName(moduleName, 'strncmp'),{
+        onEnter:function(args){
+            try {
+                var v1 =Memory.readUtf8String(args[0])
+                var v2 =Memory.readUtf8String(args[1])
+                if(v1.includes("abcdefghijklmnopqrstuvw") || v2.includes("abcdefghijklmnopqrstuvw")){
+                    console.log(v1,v2);
+                }
+                //console.log(Memory.readUtf8String(args));
+                
+            } catch (error) {
+                console.error(error)
+            }
+            
     
 
-        // You can add your custom logic or actions here
+            //console.log('strncmp called with:', str1, str2);
 
-        // Call the original method
-        this.verify(view);
-    };
-});
+        },
+        onLeave:function(retval){
+    
+        }
+    
+    });
+    
+}, 5000);
+    
+
+// if (strncmpAddress) {
+//     console.log('Found strncmp at address:', strncmpAddress);
+
+//     // Create a NativeFunction for strncmp
+//     var strncmp = new NativeFunction(strncmpAddress, 'int', ['pointer', 'pointer', 'size_t']);
+
+//     // Intercept strncmp
+//     Interceptor.replace(strncmp, new NativeCallback(function (str1, str2, size) {
+//         // Convert the pointers to strings
+//         var string1 = Memory.readUtf8String(str1, size);
+//         var string2 = Memory.readUtf8String(str2, size);
+        
+//         // Log the arguments and modify the result
+//         console.log('strncmp called with:', string1, string2, size);
+        
+//         // Bypass the original check by returning a non-zero value
+//         return 1;
+//     }, 'int', ['pointer', 'pointer', 'size_t']));
+// } else {
+//     console.error('strncmp not found in', moduleName);
+// }

@@ -212,9 +212,7 @@ func DeleteSongs(w http.ResponseWriter, r *http.Request) {
 	}
 	delete(playlist.Songs, reqBody.SongID)
 
-	common.EncodeToJSON(w, map[string]string{
-		"message": common.Successmessage,
-	})
+	common.EncodeToJSON(w, common.Successmessage)
 }
 
 func DeletePlaylist(w http.ResponseWriter, r *http.Request) {

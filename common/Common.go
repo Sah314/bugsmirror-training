@@ -31,7 +31,10 @@ func GenerateSongID() string {
 
 func EncodeToJSON(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(data)
+	responseBody := ResponseBody{
+		Message: data,
+	}
+	err := json.NewEncoder(w).Encode(responseBody)
 	if err != nil {
 		return
 	}

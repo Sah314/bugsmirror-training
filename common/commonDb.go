@@ -29,6 +29,10 @@ type UserReqBody struct {
 	Email      string `json:"email"`
 }
 
+type ResponseBody struct {
+	Message interface{} `json:"message"`
+}
+
 // Song represents a song's data.
 type Song struct {
 	ID        string
